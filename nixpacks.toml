@@ -1,0 +1,8 @@
+[phases.setup]
+apt_packages = ["maven", "openjdk-17-jdk"]
+
+[phases.build]
+command = "mvn clean install"
+
+[phases.start]
+command = "java -jar target/bahidro-0.0.1-SNAPSHOT.jar"

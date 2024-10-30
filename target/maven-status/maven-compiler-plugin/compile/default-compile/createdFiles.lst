@@ -1,0 +1,5 @@
+com\isaac\bahidro\model\Bacia.class
+com\isaac\bahidro\model\MapController.class
+com\isaac\bahidro\BahidroApplication.class
+com\isaac\bahidro\controller\BaciaController.class
+com\isaac\bahidro\repository\BaciaRepository.class

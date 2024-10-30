@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BaHidro Web</title>
+  <!-- BOOTSTRAP -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+
+  <!-- LEAFLET CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin="" />
+
+  <!-- FONTES -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&family=Roboto:wght@900&display=swap"
+    rel="stylesheet">
+
+  <!-- FONT AWESOME -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+    }
+
+    #menu {
+      width: 350px;
+      background-color: #f8f9fa;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 500;
+      display: none;
+    }
+
+    #sidebar, #helpSidebar {
+      width: 250px;
+      background-color: #e9ecef;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      z-index: 1001;
+      display: none;
+    }
+
+    #map {
+      flex: 1;
+      transition: flex 0.3s ease;
+    }
+
+    #project {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #333;
+      z-index: 1000;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    #project h1 {
+      margin: 0;
+      font-size: 36px;
+      color: #333;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    #project h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #666;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    #addBaciaButton {
+      position: absolute;
+      top: 20px;
+      right: 80px;
+      z-index: 1000;
+    }
+
+    #helpButton {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Botão de Adicionar Nova Bacia -->
+  <button id="addBaciaButton" class="btn btn-primary">Adicionar Nova Bacia</button>
+
+  <!-- Botão de Ajuda -->
+  <button id="helpButton" class="btn btn-secondary">
+    <i class="fa fa-question"></i>
+  </button>
+
+  <!-- Menu Lateral para Exibir o Nome do Rio -->
+  <div id="sidebar">
+    <h3>Detalhes da Bacia</h3>
+    <p id="baciaNome">Nome do Rio:</p>
+  </div>
+
+  <!-- Menu de Ajuda -->
+  <div id="helpSidebar">
+    <h3>Ajuda</h3>
+    <p>Bem-vindo ao BaHidro Web! Este sistema permite adicionar e visualizar bacias hidrográficas.</p>
+    <ul>
+      <li><strong>Adicionar Nova Bacia:</strong> Clique no botão "Adicionar Nova Bacia" e insira as informações.</li>
+      <li><strong>Visualizar Bacias:</strong> As bacias cadastradas serão exibidas automaticamente no mapa. Para ter mais informações sobre uma bacia é só clicar em cima.</li>
+      <li><strong>Mais Ajuda:</strong> Para mais instruções, contate o suporte.</li>
+    </ul>
+  </div>
+
+  <!-- Menu de Adição de Bacia (Oculto até autenticação) -->
+  <div id="menu" class="border-end shadow-sm">
+    <h2 class="mb-4">Adicionar Bacia Hidrográfica</h2>
+    <form action="/bacias/add" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+      <div class="mb-3">
+        <label for="nome" class="form-label">Nome da Bacia:</label>
+        <input type="text" class="form-control" id="nome" name="nome" required>
+        <div class="invalid-feedback">
+          Por favor, insira o nome da bacia.
+        </div>
+      </div>
+      <!-- Conteúdo do formulário continua... -->
+    </form>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="project">
+    <h1>BaHidro Web</h1>
+    <h2>Regionalização de Vazões para o estado da Bahia</h2>
+  </div>
+
+  <!-- LEAFLET -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+
+  <!-- BOOTSTRAP -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous">
+  </script>
+
+  <script>
+    // Variáveis globais
+    var map, baciaLayers = {}, selectedBacia = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Inicializa o mapa Leaflet
+      map = L.map('map').setView([-12.9714, -38.5014], 7);
+
+      // Adiciona camada de azulejos do OpenStreetMap ao mapa
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Carrega as bacias no mapa
+      loadBacias();
+
+      // Adiciona evento ao botão "Adicionar Nova Bacia"
+      document.getElementById('addBaciaButton').addEventListener('click', function () {
+        var senha = prompt('Digite a senha para adicionar uma nova bacia:');
+        if (senha === 'admin') {
+          document.getElementById('menu').style.display = 'block';
+          document.getElementById('addBaciaButton').style.display = 'none';
+        } else {
+          alert('Senha incorreta!');
+        }
+      });
+
+      // Evento para exibir o menu de ajuda
+      document.getElementById('helpButton').addEventListener('click', function () {
+        const helpSidebar = document.getElementById('helpSidebar');
+        helpSidebar.style.display = helpSidebar.style.display === 'block' ? 'none' : 'block';
+      });
+    });
+
+    // Função para carregar as bacias no mapa
+    function loadBacias() {
+      fetch('/bacias/geojson')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Erro ao carregar bacias: ' + response.statusText);
+          }
+          return response.json();
+        })
+        .then(bacias => {
+          displayBacias(bacias);
+        })
+        .catch(error => console.error('Erro ao carregar bacias:', error));
+    }
+
+    // Função para exibir as bacias no mapa
+    function displayBacias(bacias) {
+      bacias.forEach(bacia => {
+        if (bacia.contornoGeoJson) {
+          var contornoData = JSON.parse(bacia.contornoGeoJson);
+          var contornoLayer = L.geoJSON(contornoData, {
+            style: { color: "#3388ff", weight: 2 }
+          }).addTo(map);
+
+          // Armazena a camada da bacia
+          baciaLayers[bacia.nome] = {
+            contorno: contornoLayer,
+            drenagem: null,
+            leito: null
+          };
+
+          // Adiciona evento de clique para exibir o menu lateral
+          contornoLayer.on('click', function () {
+            zoomToBacia(bacia, contornoLayer);
+            showSidebar(bacia.nome);
+          });
+        }
+      });
+    }
+
+    // Função para ajustar o zoom para uma bacia específica e exibir seus dados
+    function zoomToBacia(bacia, contornoLayer) {
+      if (selectedBacia !== bacia.nome) {
+        Object.keys(baciaLayers).forEach(nome => {
+          if (nome !== bacia.nome) {
+            if (baciaLayers[nome].contorno) {
+              map.removeLayer(baciaLayers[nome].contorno);
+            }
+          }
+        });
+
+        map.fitBounds(contornoLayer.getBounds());
+
+        if (!baciaLayers[bacia.nome].drenagem && bacia.drenagemGeoJson) {
+          var drenagemData = JSON.parse(bacia.drenagemGeoJson);
+          var drenagemLayer = L.geoJSON(drenagemData, {
+            style: { color: "#007f00", weight: 1 }
+          }).addTo(map);
+          baciaLayers[bacia.nome].drenagem = drenagemLayer;
+        }
+
+        if (!baciaLayers[bacia.nome].leito && bacia.leitoGeoJson) {
+          var leitoData = JSON.parse(bacia.leitoGeoJson);
+          var leitoLayer = L.geoJSON(leitoData, {
+            style: { color: "#FF0000", weight: 1 }
+          }).addTo(map);
+          baciaLayers[bacia.nome].leito = leitoLayer;
+        }
+
+        if (baciaLayers[bacia.nome].drenagem) {
+          baciaLayers[bacia.nome].drenagem.addTo(map);
+        }
+        if (baciaLayers[bacia.nome].leito) {
+          baciaLayers[bacia.nome].leito.addTo(map);
+        }
+
+        selectedBacia = bacia.nome;
+      }
+    }
+
+    // Função para exibir o menu lateral com o nome da bacia
+    function showSidebar(nomeBacia) {
+      document.getElementById('baciaNome').innerText = `Nome do Rio: ${nomeBacia}`;
+      document.getElementById('sidebar').style.display = 'block';
+    }
+  </script>
+
+</body>
+
+</html>
